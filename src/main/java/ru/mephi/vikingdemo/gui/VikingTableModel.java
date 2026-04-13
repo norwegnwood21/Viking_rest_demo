@@ -1,3 +1,4 @@
+
 package ru.mephi.vikingdemo.gui;
 
 import ru.mephi.vikingdemo.model.EquipmentItem;
@@ -10,13 +11,29 @@ import java.util.stream.Collectors;
 
 public class VikingTableModel extends AbstractTableModel {
 
-    private final String[] columns = {"Name", "Age", "Height (cm)", "Hair color", "Beard style", "Equipment"};
-    private final List<Viking> data = new ArrayList<>();
+    private final String[] columns = {"Index", "Name", "Age", "Height (cm)", "Hair color", "Beard style", "Equipment"};
+    private List<Viking> data = new ArrayList<>();
+
+    public VikingTableModel() {
+        this.data = new ArrayList<>();
+    }
+
+    public VikingTableModel(List<Viking> data) {
+        this.data = new ArrayList<>(data);
+    }
 
     public void addViking(Viking viking) {
-        int row = data.size();
         data.add(viking);
-        fireTableRowsInserted(row, row);
+        fireTableRowsInserted(data.size() - 1, data.size() - 1);
+    }
+
+    public void setData(List<Viking> newData) {
+        this.data = new ArrayList<>(newData);
+        fireTableDataChanged();
+    }
+
+    public Viking getVikingAt(int row) {
+        return data.get(row);
     }
 
     @Override
@@ -38,12 +55,13 @@ public class VikingTableModel extends AbstractTableModel {
     public Object getValueAt(int rowIndex, int columnIndex) {
         Viking viking = data.get(rowIndex);
         return switch (columnIndex) {
-            case 0 -> viking.name();
-            case 1 -> viking.age();
-            case 2 -> viking.heightCm();
-            case 3 -> viking.hairColor();
-            case 4 -> viking.beardStyle();
-            case 5 -> formatEquipment(viking.equipment());
+            case 0 -> rowIndex;
+            case 1 -> viking.name();
+            case 2 -> viking.age();
+            case 3 -> viking.heightCm();
+            case 4 -> viking.hairColor();
+            case 5 -> viking.beardStyle();
+            case 6 -> formatEquipment(viking.equipment());
             default -> "";
         };
     }

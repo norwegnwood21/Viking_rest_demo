@@ -1,17 +1,18 @@
+
 package ru.mephi.vikingdemo.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import ru.mephi.vikingdemo.model.Viking;
 import ru.mephi.vikingdemo.service.VikingService;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/vikings")
@@ -25,31 +26,57 @@ public class VikingController {
         this.vikingService = vikingService;
         this.vikingListener = vikingListener;
     }
-    
+
     @GetMapping
-    @Operation(summary = "Получить список созданных викингов", 
-            operationId = "getAllVikings")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Список успешно получен")
-    })
+    @Operation(summary = "Получить список созданных викингов")
     public List<Viking> getAllVikings() {
-        System.out.println("GET /api/vikings called");
         return vikingService.findAll();
     }
 
-    @GetMapping("/test")
-    @Operation(summary = "Получить список тестовых викингов", 
-            operationId = "getTest")
+    @PostMapping
+    @Operation(summary = "Добавить нового викинга")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Список успешно получен")
+            @ApiResponse(responseCode = "201", description = "Викинг успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные")
     })
-    public List<String> test() {
-        System.out.println("GET /api/vikings/test called");
-        return List.of("Ragnar", "Bjorn");
+    public ResponseEntity<Viking> createViking(@RequestBody Viking viking) {
+        Viking created = vikingService.addViking(viking);
+        if (vikingListener != null && vikingListener.getGui() != null) {
+            vikingListener.getGui().refreshTable(vikingService.findAll());
+        }
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-    
-    @PostMapping("/post")
-    public void addViking(){
-        vikingListener.testAdd();
+
+    @DeleteMapping("/{index}")
+    @Operation(summary = "Удалить викинга по индексу")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Викинг успешно удален"),
+            @ApiResponse(responseCode = "404", description = "Викинг не найден")
+    })
+    public ResponseEntity<Void> deleteViking(@PathVariable int index) {
+        boolean deleted = vikingService.deleteViking(index);
+        if (deleted && vikingListener != null && vikingListener.getGui() != null) {
+            vikingListener.getGui().refreshTable(vikingService.findAll());
+        }
+        return deleted ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @PutMapping("/{index}")
+    @Operation(summary = "Полностью обновить викинга по индексу")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Викинг успешно обновлен"),
+            @ApiResponse(responseCode = "404", description = "Викинг не найден"),
+            @ApiResponse(responseCode = "400", description = "Некорректные данные")
+    })
+    public ResponseEntity<Viking> updateViking(
+            @PathVariable int index,
+            @RequestBody Viking viking) {
+        Viking updated = vikingService.updateViking(index, viking);
+        if (updated != null && vikingListener != null && vikingListener.getGui() != null) {
+            vikingListener.getGui().refreshTable(vikingService.findAll());
+        }
+        return updated != null ? new ResponseEntity<>(updated, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }
