@@ -1,4 +1,4 @@
-
+//practicum3
 package ru.mephi.vikingdemo.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
