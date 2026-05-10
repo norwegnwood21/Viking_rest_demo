@@ -6,6 +6,8 @@ import ru.mephi.vikingdemo.model.Viking;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.IntStream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
@@ -47,5 +49,12 @@ public class VikingService {
             return updatedViking;
         }
         return null;
+    }
+    //массовая генерация викингов
+    public void generateMultipleVikings(int count) {
+        IntStream.range(0, count).forEach(i -> {
+            Viking randomViking = vikingFactory.createRandomViking();
+            vikings.add(randomViking);
+        });
     }
 }

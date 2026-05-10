@@ -1,10 +1,10 @@
-// VikingDesktopFrame.java
 package ru.mephi.vikingdemo.gui;
 
-import ru.mephi.vikingdemo.model.Viking;
-import ru.mephi.vikingdemo.service.VikingService;
-import ru.mephi.vikingdemo.model.HairColor;
 import ru.mephi.vikingdemo.model.BeardStyle;
+import ru.mephi.vikingdemo.model.HairColor;
+import ru.mephi.vikingdemo.model.Viking;
+import ru.mephi.vikingdemo.service.LambdaStatisticsService;
+import ru.mephi.vikingdemo.service.VikingService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,11 +15,13 @@ import java.awt.event.MouseEvent;
 public class VikingDesktopFrame extends JFrame {
 
     private final VikingService vikingService;
+    private final LambdaStatisticsService statsService;
     private VikingTableModel tableModel;
     private JTable vikingTable;
 
-    public VikingDesktopFrame(VikingService vikingService) {
+    public VikingDesktopFrame(VikingService vikingService, LambdaStatisticsService statsService) {
         this.vikingService = vikingService;
+        this.statsService = statsService;
 
         setTitle("Viking Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -65,16 +67,25 @@ public class VikingDesktopFrame extends JFrame {
         JButton updateSelectedButton = new JButton("Update Selected");
         updateSelectedButton.addActionListener(e -> updateSelectedViking());
 
+        // новые
+        JButton statisticsButton = new JButton("Статистика");
+        statisticsButton.addActionListener(e -> showStatisticsDialog());
+
+        JButton massGenerateButton = new JButton("Массовая генерация");
+        massGenerateButton.addActionListener(e -> massGenerate());
+
         buttonPanel.add(createRandomButton);
         buttonPanel.add(refreshButton);
         buttonPanel.add(deleteSelectedButton);
         buttonPanel.add(updateSelectedButton);
+        buttonPanel.add(statisticsButton);
+        buttonPanel.add(massGenerateButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
     private void onCreateRandomViking() {
-        Viking viking = vikingService.createRandomViking();
+        vikingService.createRandomViking(); // автоматически добавляет в сервис
         refreshTable(vikingService.findAll());
     }
 
@@ -141,13 +152,34 @@ public class VikingDesktopFrame extends JFrame {
                         Integer.parseInt(heightField.getText()),
                         (HairColor) hairBox.getSelectedItem(),
                         (BeardStyle) beardBox.getSelectedItem(),
-                        oldViking.equipment()
+                        oldViking.equipment() // сохраняем старое снаряжение
                 );
-
                 vikingService.updateViking(index, updatedViking);
                 refreshTable(vikingService.findAll());
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Invalid number format!");
+            }
+        }
+    }
+
+    private void showStatisticsDialog() {
+        new StatisticsDialog(this, statsService, vikingService).setVisible(true);
+    }
+
+    private void massGenerate() {
+        String input = JOptionPane.showInputDialog(this, "Введите количество викингов для генерации:");
+        if (input != null) {
+            try {
+                int count = Integer.parseInt(input);
+                if (count > 0) {
+                    vikingService.generateMultipleVikings(count);
+                    refreshTable(vikingService.findAll());
+                    JOptionPane.showMessageDialog(this, "Сгенерировано " + count + " викингов.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Число должно быть больше нуля.");
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Некорректное число.");
             }
         }
     }
