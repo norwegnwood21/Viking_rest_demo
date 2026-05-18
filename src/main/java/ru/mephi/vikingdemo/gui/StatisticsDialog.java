@@ -38,8 +38,7 @@ public class StatisticsDialog extends JDialog {
         buttonPanel.add(createButton("Подсчёт возраст 20-35", e -> countByAgeBetween(20, 35)));
         buttonPanel.add(createButton("Подсчёт вне 20-35", e -> countByAgeOutside(20, 35)));
         buttonPanel.add(createButton("Борода LONG + волосы Brown", e -> countByBeardAndHair(BeardStyle.LONG, HairColor.Brown)));
-        buttonPanel.add(createButton("Имеют ровно 1 топор", e -> countByAxes(1)));
-        buttonPanel.add(createButton("Имеют ровно 2 топора", e -> countByAxes(2)));
+        buttonPanel.add(createButton("Имеют 1 или 2 топора", e -> countVikingsWithOneOrTwoAxes()));
         buttonPanel.add(createButton("Случайный викинг >180 см", e -> showRandomTall()));
         buttonPanel.add(createButton("Все с легендарным снаряжением", e -> showLegendary()));
         buttonPanel.add(createButton("Рыжебородые по возрасту", e -> showRedBeardedSorted()));
@@ -85,9 +84,9 @@ public class StatisticsDialog extends JDialog {
         appendResult("Викингов с бородой " + beard + " и волосами " + hair, count);
     }
 
-    private void countByAxes(int number) {
-        long count = statsService.countByNumberOfAxes(number);
-        appendResult("Викингов, имеющих ровно " + number + " топор(а)", count);
+    private void countVikingsWithOneOrTwoAxes() {
+        long count = statsService.countVikingsWithOneOrTwoAxes();
+        appendResult("Викингов, имеющих 1 или 2 топора", count);
     }
 
     private void showRandomTall() {
@@ -107,23 +106,33 @@ public class StatisticsDialog extends JDialog {
 
     private void showRedBeardedSorted() {
         List<Viking> list = statsService.getRedBeardedVikingsSortedByAge();
-        String result = list.isEmpty() ? "Нет" : list.stream()
-                .map(v -> v.name() + " (" + v.age() + " лет)")
-                .collect(Collectors.joining("\n"));
-        appendResult("Рыжебородые (волосы Red) по возрасту", result);
+        if (list.isEmpty()) {
+            appendResult("Рыжебородые  по возрасту", "Нет таких викингов");
+        } else {
+            String result = list.stream()
+                    .map(v -> v.name() + " (" + v.age() + " лет, борода: " + v.beardStyle() + ", волосы: " + v.hairColor() + ")")
+                    .collect(Collectors.joining("\n"));
+            appendResult("Рыжебородые  по возрасту", result);
+        }
     }
 
     private void showMaxId() {
         int total = vikingService.findAll().size();
-        List<Integer> ids = IntStream.range(0, total).boxed().collect(Collectors.toList());
+        Integer[] ids = new Integer[total];
+        for (int i = 0; i < total; i++) {
+            ids[i] = i;
+        }
         Integer maxId = statsService.getMaxId(ids);
-        appendResult("Максимальный ID (последний индекс)", maxId == -1 ? "Нет викингов" : maxId);
+        appendResult("Максимальный ID ", maxId == -1 ? "Нет викингов" : maxId);
     }
 
     private void showEvenIds() {
         int total = vikingService.findAll().size();
-        List<Integer> ids = IntStream.range(0, total).boxed().collect(Collectors.toList());
+        Integer[] ids = new Integer[total];
+        for (int i = 0; i < total; i++) {
+            ids[i] = i;
+        }
         List<Integer> evenIds = statsService.getEvenIds(ids);
-        appendResult("Чётные ID", evenIds.isEmpty() ? "Нет" : evenIds);
+        appendResult("Чётные ID", evenIds.isEmpty() ? "Нет" : evenIds.toString());
     }
 }

@@ -118,10 +118,10 @@ public class VikingController {
         return statsService.countByBeardStyleAndHairColor(beard, hair);
     }
 
-    @GetMapping("/stats/count/axes/{number}")
-    @Operation(summary = "Количество викингов, имеющих ровно указанное число топоров")
-    public long countByAxes(@PathVariable int number) {
-        return statsService.countByNumberOfAxes(number);
+    @GetMapping("/stats/count/axes/one-or-two")
+    @Operation(summary = "Количество викингов, имеющих 1 или 2 топора")
+    public long countVikingsWithOneOrTwoAxes() {
+        return statsService.countVikingsWithOneOrTwoAxes();
     }
 
     @GetMapping("/stats/random-tall")
@@ -139,7 +139,7 @@ public class VikingController {
     }
 
     @GetMapping("/stats/red-bearded-sorted")
-    @Operation(summary = "Рыжебородые викинги, отсортированные по возрасту")
+    @Operation(summary = "Рыжебородые викинги (есть борода + рыжие волосы), отсортированные по возрасту")
     public List<Viking> getRedBeardedSorted() {
         return statsService.getRedBeardedVikingsSortedByAge();
     }
@@ -147,18 +147,22 @@ public class VikingController {
     @GetMapping("/stats/id/max")
     @Operation(summary = "Максимальный ID (последний индекс) в списке викингов")
     public int getMaxId() {
-        List<Integer> ids = IntStream.range(0, vikingService.findAll().size())
-                .boxed()
-                .collect(Collectors.toList());
+        int total = vikingService.findAll().size();
+        Integer[] ids = new Integer[total];
+        for (int i = 0; i < total; i++) {
+            ids[i] = i;
+        }
         return statsService.getMaxId(ids);
     }
 
     @GetMapping("/stats/id/even")
     @Operation(summary = "Список чётных ID")
     public List<Integer> getEvenIds() {
-        List<Integer> ids = IntStream.range(0, vikingService.findAll().size())
-                .boxed()
-                .collect(Collectors.toList());
+        int total = vikingService.findAll().size();
+        Integer[] ids = new Integer[total];
+        for (int i = 0; i < total; i++) {
+            ids[i] = i;
+        }
         return statsService.getEvenIds(ids);
     }
 

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
-
+import java.util.Arrays;
 @Service
 public class LambdaStatisticsService {
 
@@ -53,19 +53,17 @@ public class LambdaStatisticsService {
                 .count();
     }
 
-    //  Подсчёт викингов, имеющих ровно один или ровно два топора (Axes)
-    public long countByNumberOfAxes(int numberOfAxes) {
+    // Подсчёт викингов, имеющих 1 ИЛИ 2 топора
+    public long countVikingsWithOneOrTwoAxes() {
         return vikingService.findAll().stream()
-                .filter(v -> countAxes(v.equipment()) == numberOfAxes)
+                .filter(v -> {
+                    long count = v.equipment().stream()
+                            .filter(item -> item.name().equalsIgnoreCase("Axe"))
+                            .count();
+                    return count == 1 || count == 2;
+                })
                 .count();
     }
-
-    private long countAxes(List<EquipmentItem> equipment) {
-        return equipment.stream()
-                .filter(item -> item.name().equalsIgnoreCase("Axe"))
-                .count();
-    }
-
     // Случайный викинг ростом выше 180 см
     public Optional<Viking> getRandomTallViking(int minHeight) {
         List<Viking> tall = vikingService.findAll().stream()
@@ -82,20 +80,26 @@ public class LambdaStatisticsService {
                 .collect(Collectors.toList());
     }
 
-    // Список рыжебородых викингов, отсортированный по возрасту
+    // Список рыжебородых викингов отсортированных
     public List<Viking> getRedBeardedVikingsSortedByAge() {
         return vikingService.findAll().stream()
+                .filter(v -> v.beardStyle() != BeardStyle.CLEAN_SHAVEN)
                 .filter(v -> v.hairColor() == HairColor.Red)
                 .sorted((v1, v2) -> Integer.compare(v1.age(), v2.age()))
                 .collect(Collectors.toList());
     }
 
-    // индексы викингов
-    public Integer getMaxId(List<Integer> ids) {
-        return ids.stream().max(Integer::compareTo).orElse(-1);
+    // Максимальный ID
+    public Integer getMaxId(Integer[] ids) {
+        return Arrays.stream(ids)
+                .max(Integer::compareTo)
+                .orElse(-1);
     }
 
-    public List<Integer> getEvenIds(List<Integer> ids) {
-        return ids.stream().filter(id -> id % 2 == 0).collect(Collectors.toList());
+    // Все чётные ID
+    public List<Integer> getEvenIds(Integer[] ids) {
+        return Arrays.stream(ids)
+                .filter(id -> id % 2 == 0)
+                .collect(Collectors.toList());
     }
 }
